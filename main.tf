@@ -165,8 +165,7 @@ resource "docker_image" "deeplearning" {
   #   }
   #   pull_parent = true
   # }
-
-  keep_locally = true
+  # keep_locally = true
 }
 
 
@@ -175,7 +174,7 @@ resource "docker_container" "workspace" {
   image    = docker_image.deeplearning.image_id
   memory   = data.coder_parameter.ram.value * 1024
   gpus     = "all"
-  name     = "coder-${lower(data.coder_workspace.me.name)}"
+  name     = "${local.username}-${lower(data.coder_workspace.me.name)}"
   hostname = lower(data.coder_workspace.me.name)
   dns      = ["192.168.1.197"]
   command  = ["sh", "-c", coder_agent.main.init_script]
@@ -192,3 +191,20 @@ resource "docker_container" "workspace" {
   }
 
 }
+
+module "coder-login" {
+  source   = "registry.coder.com/modules/coder-login/coder"
+  version  = "1.0.15"
+  agent_id = coder_agent.main.id
+}
+
+module "jetbrains_gateway" {
+  source         = "registry.coder.com/modules/jetbrains-gateway/coder"
+  version        = "1.0.25"
+  agent_id       = coder_agent.main.id
+  agent_name     = "main"
+  folder         = "/home/${local.username}/git"
+  jetbrains_ides = ["CL", "PY"]
+  default        = "PY"
+}
+
