@@ -28,28 +28,6 @@ data "coder_parameter" "ram" {
   }
 }
 
-# data "coder_parameter" "aName" {
-#   name         = "aName"
-#   display_name = "displayedName"
-#   icon         = "svgUrl"
-#   description  = "aDesctription"
-#   type         = "string"
-#   default      = "defaultOption"
-#   mutable      = false
-#   order        = 1
-#   option {
-#     name        = "option1"
-#     description = "description1"
-#     value       = "value1"
-#     icon        = "svgUrl1"
-#   }
-#   option {
-#     name        = "option2"
-#     description = "description2"
-#     value       = "value2"
-#     icon        = "svgUrl2"
-#   }
-# }
 
 resource "coder_metadata" "workspace_info" {
   count       = data.coder_workspace.me.start_count
@@ -89,13 +67,6 @@ resource "coder_agent" "main" {
     # Start code-server in the background.
     /tmp/code-server/bin/code-server --auth none --port 13337 >/tmp/code-server.log 2>&1 &
   EOT
-
-  env = {
-    GIT_AUTHOR_NAME     = coalesce(data.coder_workspace_owner.me.full_name, data.coder_workspace_owner.me.name)
-    GIT_AUTHOR_EMAIL    = "${data.coder_workspace_owner.me.email}"
-    GIT_COMMITTER_NAME  = coalesce(data.coder_workspace_owner.me.full_name, data.coder_workspace_owner.me.name)
-    GIT_COMMITTER_EMAIL = "${data.coder_workspace_owner.me.email}"
-  }
 
   metadata {
     display_name = "CPU Usage Workspace"
@@ -168,6 +139,9 @@ resource "docker_image" "deeplearning" {
   # keep_locally = true
 }
 
+resource "docker_volume" "home_volume" {
+  name = "${data.coder_workspace.me.id}-${lower(data.coder_workspace.me.name)}-home"
+}
 
 resource "docker_container" "workspace" {
   count    = data.coder_workspace.me.start_count
@@ -184,8 +158,45 @@ resource "docker_container" "workspace" {
   devices {
     host_path = "/dev/nvidia0"
   }
+  devices {
+    host_path = "/dev/nvidiactl"
+  }
+  devices {
+    host_path = "/dev/nvidia-uvm-tools"
+  }
+  devices {
+    host_path = "/dev/nvidia-uvm"
+  }
 
   host {
+    host = "host.docker.internal"
+    ip   = "host-gateway"
+  }
+
+  volumes {
+  container_path = "/home/${local.username}"
+  volume_name    = docker_volume.home_volume.name
+  read_only      = false
+}
+
+}
+
+module "coder-login" {
+  source   = "registry.coder.com/modules/coder-login/coder"
+  version  = "1.0.15"
+  agent_id = coder_agent.main.id
+}
+
+module "jetbrains_gateway" {
+  source         = "registry.coder.com/modules/jetbrains-gateway/coder"
+  version        = "1.0.25"
+  agent_id       = coder_agent.main.id
+  agent_name     = "main"
+  folder         = "/home/${local.username}/git"
+  jetbrains_ides = ["CL", "PY"]
+  default        = "PY"
+}
+t {
     host = "host.docker.internal"
     ip   = "host-gateway"
   }
