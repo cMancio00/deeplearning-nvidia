@@ -18,7 +18,7 @@ data "coder_parameter" "ram" {
   display_name = "RAM (GB)"
   description  = "Choose amount of RAM (min: 16 GB, max: 64 GB)"
   type         = "number"
-  #icon         = ""
+  icon        = "icons/ram.svg"
   mutable      = true
   default      = "32"
   order        = 2
@@ -28,11 +28,10 @@ data "coder_parameter" "ram" {
   }
 }
 
-
 resource "coder_metadata" "workspace_info" {
   count       = data.coder_workspace.me.start_count
   resource_id = docker_image.deeplearning.id
-  # icon        = ""
+  icon        = "icons/nvidia.svg"
 
   item {
     key   = "RAM (GB)"
@@ -150,7 +149,7 @@ resource "docker_container" "workspace" {
   gpus     = "all"
   name     = "${local.username}-${lower(data.coder_workspace.me.name)}"
   hostname = lower(data.coder_workspace.me.name)
-  dns      = ["192.168.1.197"]
+  dns      = ["192.168.1.201"]
   command  = ["sh", "-c", coder_agent.main.init_script]
   env      = ["CODER_AGENT_TOKEN=${coder_agent.main.token}"]
   restart  = "unless-stopped"
@@ -187,35 +186,6 @@ module "coder-login" {
   agent_id = coder_agent.main.id
 }
 
-module "jetbrains_gateway" {
-  source         = "registry.coder.com/modules/jetbrains-gateway/coder"
-  version        = "1.0.25"
-  agent_id       = coder_agent.main.id
-  agent_name     = "main"
-  folder         = "/home/${local.username}/git"
-  jetbrains_ides = ["CL", "PY"]
-  default        = "PY"
-}
-t {
-    host = "host.docker.internal"
-    ip   = "host-gateway"
-  }
 
-}
-
-module "coder-login" {
-  source   = "registry.coder.com/modules/coder-login/coder"
-  version  = "1.0.15"
-  agent_id = coder_agent.main.id
-}
-
-module "jetbrains_gateway" {
-  source         = "registry.coder.com/modules/jetbrains-gateway/coder"
-  version        = "1.0.25"
-  agent_id       = coder_agent.main.id
-  agent_name     = "main"
-  folder         = "/home/${local.username}/git"
-  jetbrains_ides = ["CL", "PY"]
-  default        = "PY"
 }
 
