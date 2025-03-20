@@ -18,7 +18,7 @@ data "coder_parameter" "ram" {
   display_name = "RAM (GB)"
   description  = "Choose amount of RAM (min: 16 GB, max: 64 GB)"
   type         = "number"
-  icon        = "icons/ram.svg"
+  icon        = "/icons/ram.svg"
   mutable      = true
   default      = "32"
   order        = 2
@@ -31,7 +31,7 @@ data "coder_parameter" "ram" {
 resource "coder_metadata" "workspace_info" {
   count       = data.coder_workspace.me.start_count
   resource_id = docker_image.deeplearning.id
-  icon        = "icons/nvidia.svg"
+  icon        = "https://raw.githubusercontent.com/cMancio00/deeplearning-nvidia/refs/heads/main/icons/nvidia.svg"
 
   item {
     key   = "RAM (GB)"
@@ -187,5 +187,5 @@ module "coder-login" {
 }
 
 
-}
+
 
