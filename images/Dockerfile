@@ -8,5 +8,4 @@ RUN useradd -m -s /bin/bash -G sudo ${USERNAME} && echo "${USERNAME} ALL=(ALL) N
 USER ${USERNAME}
 ENV PATH=/home/${USERNAME}/.local/bin:$PATH
 WORKDIR /home/${USERNAME}
-ENV PATH=/home/${USERNAME}/.local/bin:$PATH
 WORKDIR /home/${USERNAME}
