@@ -108,38 +108,23 @@ resource "coder_agent" "main" {
 
 }
 
-resource "coder_app" "code-server" {
-  agent_id     = coder_agent.main.id
-  slug         = "code-server"
-  display_name = "code-server"
-  url          = "http://localhost:13337/?folder=/home/${local.username}"
-  icon         = "/icon/code.svg"
-  subdomain    = false
-  share        = "owner"
-
-  healthcheck {
-    url       = "http://localhost:13337/healthz"
-    interval  = 5
-    threshold = 6
-  }
-}
 
 resource "docker_image" "deeplearning" {
-  name = "thesis:latest"
-  # build {
-  #   context    = "./images"
-  #   dockerfile = "Dockerfile"
-  #   tag        = ["thesis:latest"]
-  #   build_args = {
-  #     "" = ""
-  #   }
-  #   pull_parent = true
-  # }
-  # keep_locally = true
+  name = "deeplearning:latest"
+  build {
+    context    = "./images"
+    dockerfile = "Dockerfile"
+    tag        = ["deeplearning:latest"]
+    build_args = {
+      "USERNAME" = "${local.username}"
+    }
+    pull_parent = true
+  }
+  keep_locally = true
 }
 
 resource "docker_volume" "home_volume" {
-  name = "${data.coder_workspace.me.id}-${lower(data.coder_workspace.me.name)}-home"
+  name = "${data.coder_workspace.me.id}-home"
 }
 
 resource "docker_container" "workspace" {
@@ -185,7 +170,3 @@ module "coder-login" {
   version  = "1.0.15"
   agent_id = coder_agent.main.id
 }
-
-
-
-
